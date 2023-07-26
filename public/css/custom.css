@@ -1,0 +1,15 @@
+.info_box_input{
+    padding: 1.6rem;
+    background-color: #f9f9f9;
+    border:none !important;
+}
+::placeholder {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #010100;
+  }
+  .info_box input.info_box_input:focus {
+    border: 0px;
+    outline: none;
+    box-shadow: none;
+}
