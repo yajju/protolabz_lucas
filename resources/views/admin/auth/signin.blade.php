@@ -25,7 +25,7 @@
                                     <a href="#" class="text-nowrap logo-img text-center d-block py-3 w-100">
                                         <img src="{{asset('adminassets/images/logos/dark-logo.svg')}}" width="180" alt="">
                                     </a>
-                                    <p class="text-center">Lucas Your Admin Portal</p>
+                                    <p class="text-center">Sign-In to your Admin Panel</p>
                                     <form role="form" class="text-start" action="{{url('admin/login')}}" method="post">
 		                                    @csrf
                                         <div class="mb-3">

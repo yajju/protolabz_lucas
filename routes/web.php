@@ -18,6 +18,19 @@ Route::group(['prefix' => 'admin'], function () {
 Route::group(['prefix' => 'admin','middleware'=> ['auth:web']], function () {
     Route::get('dashboard',[AdminController::class,'dashboard']);
     Route::get('logout',[AdminController::class,'logout']);
+
+    Route::get('forgot-password', [AdminController::class, 'forgot_password']);
+    // Route::get('new-registration', [AdminController::class, 'new_registration']);
+    // Route::post('registration', [AdminController::class, 'save_user']); 
+    Route::get('change-password', [AdminController::class, 'change_passwordform']);
+    Route::post('change-password', [AdminController::class, 'change_password']);
+
+    Route::get('merchants',[AdminController::class,'merchants']);
+    Route::get('transactions',[AdminController::class,'transactions']);
+    Route::get('reports',[AdminController::class,'reports']);
+    Route::get('support',[AdminController::class,'support']);
+    Route::get('documentation',[AdminController::class,'documentation']);
+
 });
 // Route::group(['prefix' => 'customer','middleware'=> ['auth:customer','prevent-back-history']], function () {
 Route::group(['prefix' => 'customer','middleware'=> ['auth:customer']], function () {
