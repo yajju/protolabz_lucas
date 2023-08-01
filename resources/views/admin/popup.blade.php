@@ -92,7 +92,7 @@
                             <div class="col col-sm-12 col-md-6 col-lg-2  p-2 anc">
                                 <a href="{{url('/User/video_sub/'.$value->id)}}" class="video_sub" data-catid="{{$value->id}}">
                                     <div class="img-bx">
-                                        <img src="{{ asset('public/IMG/print1.png') }}" class="img-fluid w-100">
+                                        <img src="{{ getAssetFilePath('IMG/print1.png') }}" class="img-fluid w-100">
                                     </div>
 
                                     <h6 style="font-size: 12px;" class="bg-dark font-weight-bold text-white boxwidth text-center py-2 h6size ">
@@ -103,7 +103,7 @@
                             {{-- <div class="col-12 col-sm-12 col-md-6 col-lg-2 mb-2 p-0 anc">
                                 <a href="{{ url('User/digisign') }}">
                                     <div class="img-bx">
-                                        <img src="{{ asset('public/IMG/print1.png') }}" class="img-fluid w-100 h-100">
+                                        <img src="{{ getAssetFilePath('IMG/print1.png') }}" class="img-fluid w-100 h-100">
                                     </div>
 
                                     <h5 class="bg-dark font-weight-bold text-white boxwidth text-center py-2 mb-0 ">
@@ -113,7 +113,7 @@
                             {{-- <div class="col-12 col-sm-12 col-md-6 col-lg-2 mb-2 p-0 anc ">
                                 <a href="{{ url('User/social-media') }}">
                                     <div class="img-bx">
-                                        <img src="{{ asset('public/IMG/Social Media.png') }}" class="img-fluid w-100 h-100">
+                                        <img src="{{ getAssetFilePath('IMG/Social Media.png') }}" class="img-fluid w-100 h-100">
                                     </div>
 
                                     <h5 class="bg-dark font-weight-bold text-white boxwidth text-center py-2 mb-0 ">
@@ -123,7 +123,7 @@
                             <div class="col-12 col-sm-12 col-md-6 col-lg-2 mb-2 p-0 anc ">
                                 <a href="{{ url('User/signage-text-detail') }}">
                                     <div class="img-bx">
-                                        <img src="{{ asset('public/IMG/Signpage.png') }}" class="img-fluid w-100 h-100">
+                                        <img src="{{ getAssetFilePath('IMG/Signpage.png') }}" class="img-fluid w-100 h-100">
                                     </div>
 
                                     <h5 class="bg-dark font-weight-bold text-white boxwidth text-center py-2 mb-0 ">
@@ -133,7 +133,7 @@
                             <div class="col-12 col-sm-12 col-md-6 col-lg-2 mb-2 p-0 anc ">
                                 <a href="{{ url('User/video') }}">
                                     <div class="img-bx">
-                                        <img src="{{ asset('public/IMG/Signpage.png') }}" class="img-fluid w-100 h-100">
+                                        <img src="{{ getAssetFilePath('IMG/Signpage.png') }}" class="img-fluid w-100 h-100">
                                     </div>
                         
                                     <h5 class="bg-dark font-weight-bold text-white boxwidth text-center py-2 mb-0 ">
@@ -143,7 +143,7 @@
                             <div class="col-12 col-sm-12 col-md-6 col-lg-2 mb-2 p-0 anc">
                                 <a href="{{ url('User/saveddesign-text-detail') }}">
                                     <div class="img-bx">
-                                        <img src="{{ asset('public/IMG/my designs.png') }}" class="img-fluid w-100 h-100">
+                                        <img src="{{ getAssetFilePath('IMG/my designs.png') }}" class="img-fluid w-100 h-100">
                                     </div>
                         
                                     <h5 class="bg-dark font-weight-bold text-white boxwidth text-center py-2 mb-0 ">
@@ -203,14 +203,14 @@
 
 
         <!-- Bootstrap core JavaScript-->
-        <script src="{{ asset('public/vendor/jquery/jquery.min.js') }}"></script>
-        <script src="{{ asset('public/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+        <script src="{{ getAssetFilePath('vendor/jquery/jquery.min.js') }}"></script>
+        <script src="{{ getAssetFilePath('vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 
         <!-- Core plugin JavaScript-->
-        <script src="{{ asset('public/vendor/jquery-easing/jquery.easing.min.js') }}"></script>
+        <script src="{{ getAssetFilePath('vendor/jquery-easing/jquery.easing.min.js') }}"></script>
 
         <!-- Custom scripts for all pages-->
-        <script src="{{ asset('public/js/sb-admin-2.min.js') }}"></script>
+        <script src="{{ getAssetFilePath('js/sb-admin-2.min.js') }}"></script>
     @endsection
 </body>
 

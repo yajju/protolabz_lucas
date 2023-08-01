@@ -40,9 +40,9 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
-        'customer' => [
+        'merchant' => [
             'driver' => 'session',
-            'provider' => 'customers',
+            'provider' => 'merchants',
         ],
 
         'api' => [
@@ -74,9 +74,9 @@ return [
             'driver' => 'eloquent',
             'model' => App\Models\User::class,
         ],
-        'customers' => [
+        'merchants' => [
             'driver' => 'eloquent',
-            'model' => App\Models\Customer::class,
+            'model' => App\Models\Merchant::class,
         ],
 
         // 'users' => [

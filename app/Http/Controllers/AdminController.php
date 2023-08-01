@@ -15,7 +15,7 @@ class AdminController extends Controller
         // echo "Hello";
         // dd("Hello");
         // return view("storeDetails");
-        return view('admin.auth.sign_in');
+        return view('admin.auth.signin');
         // $colorData="";
         // $optionData="";
         // return view("storeDetails",compact(['colorData','optionData']));
@@ -30,7 +30,7 @@ class AdminController extends Controller
         return view('admin.auth.signin');        
     }
 
-    public function admin_login(Request $request)
+    public function logged(Request $request)
     {
         // print_r($request->input());
         // // $input = $request->all();
@@ -84,7 +84,6 @@ class AdminController extends Controller
     {
         return view('admin.change-password');
     }
-
     public function change_password(Request $request)
     {
         // dd($request->all());
@@ -120,9 +119,9 @@ class AdminController extends Controller
 		];
 		$message = [
 			'currentpassword.required' => 'Current Password is Required',
-			'currentpassword.min' => 'Current Password - Minimum Eight (8) Character\'s Required',
+			'currentpassword.min' => 'Current Password - Minimum Two (2) Character\'s Required',
 			'newpassword.required' => 'Current Password is Required',
-			'newpassword.min' => 'New Password - Minimum Eight (8) Character\'s Required',
+			'newpassword.min' => 'New Password - Minimum Two (2) Character\'s Required',
 			'confirmpassword.same' => 'New Password is Mismatched',
 		];
 		$validator = Validator::make($request->all(), $rol, $message);
@@ -155,7 +154,12 @@ class AdminController extends Controller
 
     public function merchants()
     {
-        return view('admin.merchants');
+        // if (Auth::guard('admin')->user()->id)
+        // {
+            $data = DB::table('users')->select('name', 'email', 'created_at', 'password', 'deleted_at')->get();
+            $result = json_decode(\json_encode($data, true));
+            return view('admin.merchants', compact('result'));
+        // }
     }
 
     public function transactions()

@@ -28,6 +28,9 @@ return [
 
     'env' => env('APP_ENV', 'production'),
 
+    'app_env' => env('APP_ENVIRONMENT', 'webserver'),
+    
+
     /*
     |--------------------------------------------------------------------------
     | Application Debug Mode

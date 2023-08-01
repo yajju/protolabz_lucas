@@ -6,7 +6,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <!-- Link of Css -->
-  <link rel="stylesheet" href="{{asset('public/css/main.css')}}">
+  <link rel="stylesheet" href="{{getAssetFilePath('public/css/main.css')}}">
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
     integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
@@ -37,7 +37,7 @@
      
        
           <div class="col-md-6 col-lg-5 col-xl-4 rounded shadowbx1 py-4">
-            <h5 class="reg-page"><img  src="{{asset('public/img/logo.png')}}" alt=""></h5>
+            <h5 class="reg-page"><img  src="{{getAssetFilePath('public/img/logo.png')}}" alt=""></h5>
             <h2 class="text-center font-weight-bold purplebx">{{ __('message.Forgot Password') }} </h2>
             <div class="form-group">
               <label for="exampleInputEmail1" class="mb-0  dark_text">{{ __('message.email') }} </label>

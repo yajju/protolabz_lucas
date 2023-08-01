@@ -1,12 +1,27 @@
+<?php
+$profile_image=Auth::guard('merchant')->user()->profile_image;
+?>
 <!doctype html>
 <html lang="en">
 
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Lucas - Admin</title>
-        <link rel="shortcut icon" type="image/png" href="{{asset('adminassets/images/logos/favicon.png')}}" />
-        <link rel="stylesheet" href="{{asset('adminassets/css/styles.min.css')}}" />
+        <title>Doonpay - Admin</title>
+        <link rel="shortcut icon" type="image/png" href="{{getAssetFilePath('images/logo.png')}}" />
+        <link rel="stylesheet" href="{{getAssetFilePath('adminassets/css/styles.min.css')}}" />
+
+        <link href="{{getAssetFilePath('assets/DataTables/datatables.min.css')}}" rel="stylesheet">
+        <style>
+          .table-bx span {
+              float: right;
+          }
+
+          .table-bx h5 {
+              font-size: 14px;
+              margin-bottom: 0px;
+          }
+        </style>
     </head>
 
     <body>
@@ -20,7 +35,7 @@
                 <div>
                     <div class="brand-logo d-flex align-items-center justify-content-between">
                     <a href="#" class="text-nowrap logo-img">
-                        <img src="{{asset('adminassets/images/logos/dark-logo.svg')}}" width="180" alt="" />
+                        <img src="{{getAssetFilePath('images/logo.png')}}" width="180" alt="" />
                     </a>
                     <div class="close-btn d-xl-none d-block sidebartoggler cursor-pointer" id="sidebarCollapse">
                         <i class="ti ti-x fs-8"></i>
@@ -31,7 +46,7 @@
                     <ul id="sidebarnav">
                         <li class="nav-small-cap">
                         <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
-                        <span class="hide-menu">Home</span>
+                        <!-- <span class="hide-menu">Home</span> -->
                         </li>
                         <li class="sidebar-item">
                         <a class="sidebar-link @yield('dashboard')" href="{{url('admin/dashboard')}}" aria-expanded="false">
@@ -94,17 +109,17 @@
                         </a>
                         </li>
                     </ul>
-                    <div class="unlimited-access hide-menu bg-light-primary position-relative mb-7 mt-5 rounded">
+                    <!-- <div class="unlimited-access hide-menu bg-light-primary position-relative mb-7 mt-5 rounded">
                         <div class="d-flex">
-                        <div class="unlimited-access-title me-3">
-                            <h6 class="fw-semibold fs-4 mb-6 text-dark w-85">Upgrade to pro</h6>
-                            <a href="#" target="_blank" class="btn btn-primary fs-2 fw-semibold lh-sm">Buy Pro</a>
+                            <div class="unlimited-access-title me-3">
+                                <h6 class="fw-semibold fs-4 mb-6 text-dark w-85">Upgrade to pro</h6>
+                                <a href="#" target="_blank" class="btn btn-primary fs-2 fw-semibold lh-sm">Buy Pro</a>
+                            </div>
+                            <div class="unlimited-access-img">
+                                <img src="{{getAssetFilePath('adminassets/images/backgrounds/rocket.png')}}" alt="" class="img-fluid">
+                            </div>
                         </div>
-                        <div class="unlimited-access-img">
-                            <img src="{{asset('adminassets/images/backgrounds/rocket.png')}}" alt="" class="img-fluid">
-                        </div>
-                        </div>
-                    </div>
+                    </div> -->
                     </nav>
                     <!-- End Sidebar navigation -->
                 </div>
@@ -133,11 +148,12 @@
                     </ul>
                     <div class="navbar-collapse justify-content-end px-0" id="navbarNav">
                       <ul class="navbar-nav flex-row ms-auto align-items-center justify-content-end">
-                        <a href="{{url('admin/logout')}}" target="_blank" class="btn btn-primary"><i class="ti ti-logout"></i> Logout</a>
+                        <a href="{{url('admin/logout')}}" class="btn btn-primary"><i class="ti ti-logout"></i> Logout</a>
                         <li class="nav-item dropdown">
                           <a class="nav-link nav-icon-hover" href="javascript:void(0)" id="drop2" data-bs-toggle="dropdown"
                             aria-expanded="false">
-                            <img src="{{asset('adminassets/images/profile/user-1.jpg')}}" alt="" width="35" height="35" class="rounded-circle">
+                            <!-- <img src="{{getAssetFilePath('adminassets/images/profile/user-1.jpg')}}" alt="" width="35" height="35" class="rounded-circle"> -->
+                            <img src="{{getAssetFilePath($profile_image)}}" alt="" width="35" height="35" class="rounded-circle">
                           </a>
                           <div class="dropdown-menu dropdown-menu-end dropdown-menu-animate-up" aria-labelledby="drop2">
                             <div class="message-body">
@@ -149,11 +165,11 @@
                                 <i class="ti ti-mail fs-6"></i>
                                 <p class="mb-0 fs-3">Change Password</p>
                               </a>
-                              <a href="{{url('admin/new-registration')}}" class="d-flex align-items-center gap-2 dropdown-item">
+                              <!-- <a href="{{url('admin/new-registration')}}" class="d-flex align-items-center gap-2 dropdown-item">
                                 <i class="ti ti-list-check fs-6"></i>
                                 <p class="mb-0 fs-3">My Task</p>
-                              </a>
-                              <a href="{{url('admin/logout')}}" class="btn btn-outline-primary mx-3 mt-2 d-block">Logout</a>
+                              </a> -->
+                              <a href="{{url('admin/logout')}}" class="btn btn-outline-primary mx-3 mt-2 d-block"><i class="ti ti-logout"></i> Logout</a>
                             </div>
                           </div>
                         </li>
@@ -165,17 +181,12 @@
 
             @yield('main_body')
 
-                </div>
-            
-                        <div class="py-6 px-6 text-center">
-                            <p class="mb-0 fs-4">
-                                <a class="text-dark" target="_blank" href="https://protolabzit.com/">
-                                        Powered by: Protolabz eServices
-                                </a>
-                            </p>
-                        </div>
-                    </div>
-              </div>
+            <div class="table-bx">
+                <h5> Doonpay &copy;
+                    <script>document.write(new Date().getFullYear())</script>
+                    <span>Powered by: Protolabz eServices</span>
+                </h5>
+            </div>
 
         <!-- ./Body Wrapper -->
         </div>
