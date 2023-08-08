@@ -25,6 +25,10 @@ $store=Auth::user();
                 <div class="row">
                     <div class="col-xs-12 col-sm-12 col-lg-12">
                         <p>Welcome at Store {{ ucwords(str_replace(".myshopify.com","",$store->name)); }}</p>
+                        <br><br><br><br>
+                        <center>
+                            <img src="{{getAssetFilePath('images/logo.png')}}" width="180" alt="">
+                        </center>
                     </div>
                 </div>
 

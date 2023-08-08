@@ -1,147 +1,141 @@
 <?PHP
 
     echo '  <style>
-                html, body {
-                    height: 100%;
-                    width: 100%;
-                }
+                        html, body {
+                            height: 100%;
+                            width: 100%;
+                        }
 
-                h1 {
-                    font-size: 45px !important;
-                }
+                        h1 {
+                            font-size: 45px !important;
+                        }
 
-                .justify {
-                    text-align: justify;
-                }
+                        .justify {
+                            text-align: justify;
+                        }
 
-                .text-14 {
-                    font-size: 14px;
-                }
+                        .text-14 {
+                            font-size: 14px;
+                        }
 
-                /* MODAL */
+                        /* MODAL */
 
-                .bg-image {
-                    background-position: center center;
-                    background-repeat: no-repeat;
-                }
+                        .bg-image {
+                            background-position: center center;
+                            background-repeat: no-repeat;
+                        }
 
-                .modal-content {
-                    border: none;
-                    border-radius: 0px !important;
-                }
+                        .modal-content {
+                            border: none;
+                            border-radius: 0px !important;
+                        }
 
-                .form-control {
-                    border-radius: 0px !important;
-                    border: 0px;
-                    border-bottom: 1.3px solid #0069d9;
-                }
+                        .form-control {
+                            border-radius: 0px !important;
+                            border: 0px;
+                            border-bottom: 1.3px solid #0069d9;
+                        }
 
-                .form-control:valid {
-                    border-color: #0069d9 !important;
-                }
+                        .form-control:valid {
+                            border-color: #0069d9 !important;
+                        }
 
-                .was-validated .form-control:valid:focus {
-                    border-color: #80bdff;
-                    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
-                }
+                        .was-validated .form-control:valid:focus {
+                            border-color: #80bdff;
+                            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+                        }
 
-                .modal-footer {
-                    padding: 0;
-                }
+                        .modal-footer {
+                            padding: 0;
+                        }
 
-                @media (min-width: 425px) {
-                    .modal-content {
-                        margin: 0 50px;
-                    }
-                    .modal-header {
-                        padding-top: 20px !important;
-                        padding-bottom: 20px !important;
-                        padding-left: 35px;
-                    }
-                    .modal-body {
-                        padding-top: 50px !important;
-                        padding-bottom: 50px !important;
-                        margin: 0 10px;
-                    }
-                }
+                        @media (min-width: 425px) {
+                            .modal-content {
+                                margin: 0 50px;
+                            }
+                            .modal-header {
+                                padding-top: 20px !important;
+                                padding-bottom: 20px !important;
+                                padding-left: 35px;
+                            }
+                            .modal-body {
+                                padding-top: 50px !important;
+                                padding-bottom: 50px !important;
+                                margin: 0 10px;
+                            }
+                        }
 
-                @media (max-width: 424px) {
-                    .modal-content {
-                        margin: 0 20px;
-                    }
-                    .modal-header {
-                        padding: 20px auto;
-                        padding-left: 18px;
-                    }
-                    .modal-title {
-                        font-size: 17px;
-                    }
-                    .modal-body {
-                        padding-top: 30px !important;
-                        padding-bottom: 30px !important;
-                        padding-left: 0px !important;
-                        padding-right: 0px !important;
-                        margin: 0 10px;
-                    }
-                }
+                        @media (max-width: 424px) {
+                            .modal-content {
+                                margin: 0 20px;
+                            }
+                            .modal-header {
+                                padding: 20px auto;
+                                padding-left: 18px;
+                            }
+                            .modal-title {
+                                font-size: 17px;
+                            }
+                            .modal-body {
+                                padding-top: 30px !important;
+                                padding-bottom: 30px !important;
+                                padding-left: 0px !important;
+                                padding-right: 0px !important;
+                                margin: 0 10px;
+                            }
+                        }
 
-                .close {
-                    color: #0069d9da;
-                    opacity: 6;
-                    text-shadow: 1px 1px 1px rgb(228, 228, 228);
-                    outline: 0 !important;
-                }
+                        .close {
+                            color: #0069d9da;
+                            opacity: 6;
+                            text-shadow: 1px 1px 1px rgb(228, 228, 228);
+                            outline: 0 !important;
+                        }
 
-                .close:hover {
-                    color: #0069d9;
-                    opacity: 6;
-                }
+                        .close:hover {
+                            color: #0069d9;
+                            opacity: 6;
+                        }
 
-                .btn-primary {
-                    height: 100%;
-                    width: 100%;
-                    padding: 20px 0;
-                    color: white;
-                    background-color: #0069d9da;
-                    border-color: #0069d9d3;
-                    border-radius: 0px !important;
-                }
+                        .btn-primary {
+                            height: 100%;
+                            width: 100%;
+                            padding: 20px 0;
+                            color: white;
+                            background-color: #0069d9da;
+                            border-color: #0069d9d3;
+                            border-radius: 0px !important;
+                        }
 
-                .btn-primary:hover {
-                    color: #fff;
-                    background-color: #0069d9;
-                    border-color: #0066d3;
-                }
+                        .btn-primary:hover {
+                            color: #fff;
+                            background-color: #0069d9;
+                            border-color: #0066d3;
+                        }
 
-                .btn-primary:not(:disabled):not(.disabled):active {
-                    color: white;
-                    background-color: #0069d9;
-                    border-color: #0066d3;
-                }
+                        .btn-primary:not(:disabled):not(.disabled):active {
+                            color: white;
+                            background-color: #0069d9;
+                            border-color: #0066d3;
+                        }
 
-                .btn-primary:focus {
-                    box-shadow: 0 0 0 !important;
-                }
+                        .btn-primary:focus {
+                            box-shadow: 0 0 0 !important;
+                        }
 
-                .shadow {
-                    border-radius: 0px !important;
-                    box-shadow: 0 0rem 1rem rgba(0, 0, 0, 0.808)!important;;
-                }
+                        .shadow {
+                            border-radius: 0px !important;
+                            box-shadow: 0 0rem 1rem rgba(0, 0, 0, 0.808)!important;;
+                        }
 
-                /* SECTION */
+                        /* SECTION */
 
-                .section {
-                    background-color: #0069d9c0;
-                    color: white;
-                }
-            </style>';
-            $data = DB::table('sub')->where('id',$value)->first();
-        //  dd($vendor);
-        foreach($data as $value)
-        {
-           $value->dosra_table = DB::table('sub')->where('id',$value->sub)->value('');
-        }
-            /*echo '
+                        .section {
+                            background-color: #0069d9c0;
+                            color: white;
+                        }
+                    </style>';
+            echo '
                     <form id="inputs" class="needs-validation" novalidate="">
                         <div class="form-group mx-2 mb-3">
                             <label for="firstname">First Name</label>
@@ -151,8 +145,8 @@
                             <label for="lastname">Last Name</label>
                             <input type="text" class="form-control" id="lastname" placeholder="Last name" required="">
                         </div>
-                    </form>';*/
-            echo '<div class="modal fade" id="modalForm" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                    </form>';
+            /*echo '<div class="modal fade" id="modalForm" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered" role="document">
                         <div class="modal-content shadow">
                             <div class="modal-header">
@@ -187,7 +181,7 @@
                             <h1 id="results"></h1>
                         </div>
                     </div>
-                </div>';
+                </div>';*/
             echo '  <script>
                     $(document).ready(function () {
                         $("#modalForm").modal({

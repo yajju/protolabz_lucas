@@ -14,6 +14,7 @@ class MessengerController extends Controller
 {
     public function index()
     {
+        // dd("Hello");
         $topics = QaTopic::where(function ($query) {
             $query
                 ->where('creator_id', Auth::id())

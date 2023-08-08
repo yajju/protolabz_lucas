@@ -12,6 +12,8 @@
 <script src="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/js/bootstrap4-toggle.min.js"></script>
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
+<script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+
 <script>
     $(document).ready(function()
     {
@@ -60,7 +62,7 @@
             toastr.warning("{{ session('warning') }}");
         @endif
     });
-   </script>
+</script>
 
 <script type="text/javascript">
     $.ajaxSetup({

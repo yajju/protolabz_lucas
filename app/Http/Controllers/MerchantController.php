@@ -70,7 +70,7 @@ class MerchantController extends Controller
         }
         else
         {
-            return back()->with('message','Wrong Credentials');
+            return back()->with('errormessage', 'Please Enter Valid Credentials !');
         }
       
     }
@@ -94,9 +94,58 @@ class MerchantController extends Controller
         return view('merchants.forgot-password');
     }
 
-    public function new_registration()
+    public function registration_form()
     {
-        return view('merchants.new-registration');
+        return view('merchants.auth.registration');
+    }
+    public function register(Request $request)
+    {
+        // dd($request);
+        $rol = [
+			'uname' => 'required|string|max:25',
+            'email' => 'required|email|unique:merchants,email',
+            'mobile' => 'required|digits:10',
+            'password' => 'required|min:6',
+		];
+		$message = [
+			'uname.required' => 'Name is Required',
+			'uname.string' => 'Name field must be a String',
+			'uname.max' => 'Name cant be more than :max characters',
+
+			'email.required' => 'Email is Required',
+			'email.email' => 'Email must be a valid email address',
+			'email.unique' => 'This Email has already been taken',
+
+			'mobile.required' => 'Mobile is Required',
+			'mobile.digits' => 'Mobile must be exactly digits',
+
+			'password.required' => 'Password is Required',
+			'password.min' => 'Password must be at least :min characters',
+		];
+		$validator = Validator::make($request->all(), $rol, $message);
+        // dd($validator);
+		if ($validator->fails())
+        {
+			// return response()->json(['status' => '0','message' => $validator->errors()]);
+            return redirect()->back()->with('errmsg',$validator->errors()->first());
+		}
+
+        // dd("done");
+        $user['name']  = $request->uname;
+        $user['email']  = $request->email;
+        $user['telephone']  = $request->mobile; 
+        $user['password']  = bcrypt($request->password); 
+        $user['status']  = "0";
+        // $user_id = DB::table('merchants')->insertGetId($user);
+        $user_id = Merchant::insertGetId($user);
+        if($user_id)
+        {
+            return redirect()->back()->with('succmsg','Merchant Registered Successfully<br>Please wait for the approval <meta http-equiv="Refresh" content="5;/merchant/login">');
+        }
+        else
+        {
+            return redirect()->back()->with('errmsg','Some Error found');
+        }
     }
 
     public function change_passwordform()
@@ -154,7 +203,8 @@ class MerchantController extends Controller
         {
             $id = Auth::guard('merchant')->user()->id;
             $admin['password'] = bcrypt($request->newpassword);
-            $password = DB::table('users')->where('id',$id)->update($admin);
+            // $password = DB::table('merchants')->where('id',$id)->update($admin);
+            $password = Merchant::where('id',$id)->update($admin);
             if($password)
             {
                 return redirect()->back()->with('succmsg','Password Updated');
@@ -176,7 +226,8 @@ class MerchantController extends Controller
         // if (Auth::guard('admin')->user()->id)
         // {
             $id = Auth::guard('merchant')->user()->id;
-            $result = DB::table('users')->select('name', 'email', 'created_at', 'password', 'deleted_at', 'profile_image')->where('id',$id)->get();
+            // $result = DB::table('merchants')->select('name', 'email', 'created_at', 'password', 'profile_image')->where('id',$id)->get();
+            $result = Merchant::select('name', 'email', 'created_at', 'password', 'profile_image')->where('id',$id)->get();
             // $result = json_decode(json_encode($result, true));
             // $result = json_encode($result);
             $result = json_decode($result,true);
@@ -239,7 +290,8 @@ class MerchantController extends Controller
         }
 
         $id = Auth::guard('merchant')->user()->id;
-        $userupdated = DB::table('users')->where('id',$id)->update($user);
+        // $userupdated = DB::table('merchants')->where('id',$id)->update($user);
+        $userupdated = Merchant::where('id',$id)->update($user);
         if($userupdated)
         {
             return redirect()->back()->with('succmsg','User Profile Updated');

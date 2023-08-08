@@ -1,5 +1,6 @@
 <?php
 $profile_image=Auth::guard('merchant')->user()->profile_image;
+if(!isset($profile_image)){$profile_image=getAssetFilePath('images/doonpay1200x1200.jpeg');}
 ?>
 <!doctype html>
 <html lang="en">
@@ -175,7 +176,7 @@ $profile_image=Auth::guard('merchant')->user()->profile_image;
                           </a> -->
                           <div class="dropdown-menu dropdown-menu-endXXX dropdown-menu-animate-up" aria-labelledby="drop2">
                             <div class="message-body">
-                              <a href="javascript:void(0)" class="d-flex align-items-center gap-2 dropdown-item">
+                              <a href="{{url('merchant/profile')}}" class="d-flex align-items-center gap-2 dropdown-item">
                                 <i class="ti ti-user fs-6"></i>
                                 <p class="mb-0 fs-3">My Profile</p>
                               </a>
@@ -204,7 +205,7 @@ $profile_image=Auth::guard('merchant')->user()->profile_image;
                           </a>
                           <div class="dropdown-menu dropdown-menu-end dropdown-menu-animate-up" aria-labelledby="drop2">
                             <div class="message-body">
-                              <a href="javascript:void(0)" class="d-flex align-items-center gap-2 dropdown-item">
+                              <a href="{{url('merchant/profile')}}" class="d-flex align-items-center gap-2 dropdown-item">
                                 <i class="ti ti-user fs-6"></i>
                                 <p class="mb-0 fs-3">My Profile</p>
                               </a>

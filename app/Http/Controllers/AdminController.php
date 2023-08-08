@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\User;
+use App\Models\Merchant;
 use Auth;
 use Validator;
 use DB;
 use Hash;
+
 
 class AdminController extends Controller
 {
@@ -47,7 +50,8 @@ class AdminController extends Controller
         ];
         // print_r($credentials);die();
 
-        if(Auth::attempt($credentials))
+        // if(Auth::attempt($credentials))
+        if (Auth::guard('web')->attempt($credentials))
         {
             return redirect('admin/dashboard');
         }
@@ -135,7 +139,8 @@ class AdminController extends Controller
         {
             $id = Auth::guard('web')->user()->id;
             $admin['password'] = bcrypt($request->newpassword);
-            $password = DB::table('users')->where('id',$id)->update($admin);
+            // $password = DB::table('users')->where('id',$id)->update($admin);
+            $password = User::where('id',$id)->update($admin);
             if($password)
             {
                 return redirect()->back()->with('succmsg','Password Updated');
@@ -154,12 +159,29 @@ class AdminController extends Controller
 
     public function merchants()
     {
+        $myID=Auth::guard('web')->user()->id;
         // if (Auth::guard('admin')->user()->id)
         // {
-            $data = DB::table('users')->select('name', 'email', 'created_at', 'password', 'deleted_at')->get();
+            // $data = DB::table('users')->select('name', 'email', 'created_at', 'password', 'deleted_at')->get();
+            $data = Merchant::select('id', 'name', 'email', 'telephone', 'password', 'created_at', 'status')->where('id','<>',$myID)->orderBy('id','Desc')->get();
             $result = json_decode(\json_encode($data, true));
+            // dd($result);
             return view('admin.merchants', compact('result'));
         // }
+    }
+    public function updateStatus(Request $request, $userID, Merchant $merchant)
+    {
+        // dd('status : '.$status);
+        // dd('status : '.$request->status);
+        // Toggle the status between 0 and 1
+        // dd('userID : '.$userID);
+        // $status = $merchant->status === 1 ? 0 : 1;
+        if(($request->status=='') || ($request->status=='0')){$newStatus='1';$statText="Activated Successfully";}
+        elseif($request->status=='1'){$newStatus='0';$statText="Deactivated Successfully";}
+        // dd('status : '.$newStatus);
+        $data = Merchant::where('id',$userID)->update(['status'=>$newStatus]);
+        
+        return response()->json(['message' => $statText, 'status' => $newStatus]);
     }
 
     public function transactions()

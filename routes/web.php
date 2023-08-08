@@ -12,7 +12,7 @@ use App\Http\Controllers\MessengerController;
 
 
 Route::group(['prefix' => 'admin'], function () {
-    Route::get('/',[AdminController::class,'home'])->name('admin_login_redirect');
+    Route::get('/',[AdminController::class,'home'])->name('admin_login');
     Route::get('login',[AdminController::class,'login_view'])->name('login');
     Route::post('login',[AdminController::class,'logged']);
 });
@@ -28,22 +28,25 @@ Route::group(['prefix' => 'admin','middleware'=> ['auth:web','prevent-back-histo
     Route::get('support',[AdminController::class,'support']);
     Route::get('documentation',[AdminController::class,'documentation']);
 
+    Route::post('/update-status/{user}', [AdminController::class,'updateStatus'])->name('update.status');
+
+
 });
 
 Route::group(['prefix' => 'merchant'], function () {
-    Route::get('/',[MerchantController::class,'home'])->name('merchant_login_redirect');
+    Route::get('/',[MerchantController::class,'home'])->name('merchant_login');
     Route::get('login',[MerchantController::class,'login_view'])->name('login');
     Route::post('login',[MerchantController::class,'logged']);
+    Route::get('registration', [MerchantController::class, 'registration_form'])->name('registration');
+    Route::post('registration', [MerchantController::class, 'register']); 
 });
-Route::group(['prefix' => 'merchant','middleware'=> ['auth:merchant','prevent-back-history']], function () {
+Route::group(['prefix' => 'merchant','middleware'=> ['auth:merchant','prevent-back-history','is_approved']], function () {
     Route::get('dashboard',[MerchantController::class,'dashboard']);
     Route::get('logout',[MerchantController::class,'logout']);
     Route::get('change-password', [MerchantController::class, 'change_passwordform']);
     Route::post('change-password', [MerchantController::class, 'change_password']);
 
     // Route::get('forgot-password', [MerchantController::class, 'forgot_password']);
-    // Route::get('new-registration', [MerchantController::class, 'new_registration']);
-    // Route::post('registration', [MerchantController::class, 'save_user']); 
 
     Route::get('profile',[MerchantController::class,'profile']);
     Route::post('profileupdate/{id}', [MerchantController::class, 'profileupdate']);
@@ -55,29 +58,34 @@ Route::group(['prefix' => 'merchant','middleware'=> ['auth:merchant','prevent-ba
 
     Route::get('messenger', [MessengerController::class,'index'])->name('merchant.messenger.index');
     Route::get('messenger/create', [MessengerController::class,'createTopic'])->name('merchant.messenger.createTopic');
-    Route::post('messenger', [MessengerController::class,'storeTopic'])->name('messenger.storeTopic');
-    Route::get('messenger/inbox', [MessengerController::class,'showInbox'])->name('messenger.showInbox');
-    Route::get('messenger/outbox', [MessengerController::class,'showOutbox'])->name('messenger.showOutbox');
-    Route::get('messenger/{topic}', [MessengerController::class,'showMessages'])->name('messenger.showMessages');
-    Route::delete('messenger/{topic}', [MessengerController::class,'destroyTopic'])->name('messenger.destroyTopic');
-    Route::post('messenger/{topic}/reply', [MessengerController::class,'replyToTopic'])->name('messenger.reply');
-    Route::get('messenger/{topic}/reply', [MessengerController::class,'showReply'])->name('messenger.showReply');
+    Route::post('messenger', [MessengerController::class,'storeTopic'])->name('merchant.messenger.storeTopic');
+    Route::get('messenger/inbox', [MessengerController::class,'showInbox'])->name('merchant.messenger.showInbox');
+    Route::get('messenger/outbox', [MessengerController::class,'showOutbox'])->name('merchant.messenger.showOutbox');
+    Route::get('messenger/{topic}', [MessengerController::class,'showMessages'])->name('merchant.messenger.showMessages');
+    Route::delete('messenger/{topic}', [MessengerController::class,'destroyTopic'])->name('merchant.messenger.destroyTopic');
+    Route::post('messenger/{topic}/reply', [MessengerController::class,'replyToTopic'])->name('merchant.messenger.reply');
+    Route::get('messenger/{topic}/reply', [MessengerController::class,'showReply'])->name('merchant.messenger.showReply');
     
 });
 
 
 Route::group(['prefix' => '', 'middleware' => ['verify.shopify']], function () {
     Route::get('/' , [StoreController::class,'home'])->name('home');
+    // Route::get('/' , [StoreController::class,'storeDetails'])->name('home');
     Route::get('/StoreDetails' , [StoreController::class,'storeDetails'])->name('Store.Details');
     Route::get('/UpdateDB' , [StoreController::class,'updateOptionData'])->name('Update.DB');
+    Route::get('/UpdateBeamCr' , [StoreController::class,'updateBeamData'])->name('Update.BEAM');
     Route::get('/snippetInstall' , [StoreController::class,'snippetInstall'])->name('snippet.create');
 
-    Route::get('/createorder' , [StoreController::class,'createorder'])->name('createorder');
+
+    // Route::get('/beamsuperadmin' , [StoreController::class,'beamSuperAdmin'])->name('beam.super.admin');
+    // Route::get('/createorder' , [StoreController::class,'createorder'])->name('createorder');
 });
 
 Route::group(['prefix' => '', 'middleware' => ['auth.proxy']], function () {
     Route::get('/proxy', [AppProxyController::class,'proxycalled'])->name('proxy');
 });
+
 
 
 

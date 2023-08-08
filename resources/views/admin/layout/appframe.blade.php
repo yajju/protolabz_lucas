@@ -1,5 +1,6 @@
 <?php
-$profile_image=Auth::guard('merchant')->user()->profile_image;
+$profile_image=Auth::guard('web')->user()->profile_image;
+if(!isset($profile_image)){$profile_image=getAssetFilePath('images/doonpay1200x1200.jpeg');}
 ?>
 <!doctype html>
 <html lang="en">
@@ -191,6 +192,7 @@ $profile_image=Auth::guard('merchant')->user()->profile_image;
         <!-- ./Body Wrapper -->
         </div>
 
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         @yield('main_script')
 
     </body>

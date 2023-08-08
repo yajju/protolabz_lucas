@@ -9,8 +9,10 @@
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
 <link href="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/css/bootstrap4-toggle.min.css" rel="stylesheet">
 
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css">
+
 <style type="text/css">
-@import url('http://fonts.cdnfonts.com/css/sf-pro-display');
+@import url('https://fonts.cdnfonts.com/css/sf-pro-display');
 
 body{
 	font-family: 'SF Pro Display', sans-serif;
@@ -108,49 +110,3 @@ p.appear_wrap_text {
 
 </style>
 
-<!-------------- NEW BTN CSS START ----------------->
-<style>
-
-@media only screen and (max-width: 360px)  {
-button#beamcheckoutbutton{
-    width: 357px;
-    height: 49px;
-    border-style: none;
-    border-radius: 10px;
-    background: url(https://phpstack-102119-3041881.cloudwaysapps.com/storage/img/Primarys.svg) no-repeat;
-    background-size: cover;
-    cursor: pointer !important;
-    margin: 0px auto;
-    margin-top: 10px !important;
-    text-align: center;
-}
-}
-@media only screen and (max-width: 676px) {
-    button#beamcheckoutbutton{
-    width: 311px;
-        height: 49px;
-        border-style: none;
-        border-radius: 10px;
-        background: url(https://phpstack-102119-3041881.cloudwaysapps.com/storage/img/Primarys.svg) no-repeat;
-        background-size: cover;
-        cursor: pointer !important;
-        margin: 0px auto;
-        margin-top: 10px !important;
-        text-align: center;
-    }
-    }
-    button#beamcheckoutbutton{
-    width: 439px;
-    height: 49px;
-    border-style: none;
-    border-radius: 10px;
-    background: url(https://phpstack-102119-3041881.cloudwaysapps.com/storage/img/Primarys.svg) no-repeat;
-    background-size: cover;
-    cursor: pointer !important;
-    margin: 0px auto;
-    margin-top: 10px !important;
-    text-align: center;
-}
-
-</style>
-<!-------------- NEW BTN CSS END ----------------->

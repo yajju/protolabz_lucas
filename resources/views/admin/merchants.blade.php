@@ -30,10 +30,11 @@
                                             <table id="merchantstab" class="table table-striped table-bordered">
                                                 <thead>
                                                     <tr>
+                                                        <th>ID</th>
                                                         <th>Store Name</th>
-                                                        <th>Token</th>
+                                                        <th>Telephone</th>
                                                         <th>Email</th>
-                                                        <th>Installed Date</th>
+                                                        <th>Registeration Date</th>
                                                         <th>Status</th>
 
                                                     </tr>
@@ -41,17 +42,33 @@
                                                 <tbody>
                                                     @foreach ($result as $var)
                                                     <tr>
+                                                        <td>{{$var->id}}</td>
                                                         <td>{{$var->name}}</td>
-                                                        <td>{{$var->password}}</td>
+                                                        <td>{{$var->telephone}}</td>
                                                         <td>{{$var->email}}</td>
-                                                        <td>{{$var->created_at}}</tdvar->
-                                                            <?php if ($var->deleted_at == '') {
-                                                            $status = 'Active';
-                                                        } else {
-                                                            $status = 'Deactive';
-                                                        }
-                                                        ?>
-                                                        <td>{{$status}}</td>
+                                                        <td>@if (isset($var->created_at))
+                                                                {{ \Carbon\Carbon::parse($var->created_at)->format('Y-m-d') }}
+                                                            @else
+                                                            @endif
+                                                        </td>
+                                                            <?php
+                                                                if (($var->status == '') || ($var->status == '0'))
+                                                                {
+                                                                    $status = '<a class="btn btn-danger m-1" href="#" onclick="updateStatus({{ $user->id }})">Not Approved</a>';
+                                                                }
+                                                                else if ($var->status == '1')
+                                                                {
+                                                                    $status = '<a class="btn btn-success m-1" href="#" onclick="updateStatus({{ $user->id }})">Approved</a>';
+                                                                }
+                                                            ?>
+                                                        <!-- <td>{!! $status !!}</td> -->
+                                                        <td>
+                                                            @if (($var->status == '') || ($var->status == '0'))
+                                                                <button class="btn btn-danger m-1" onclick="updateStatus({{ $var->id }},{{ $var->status }})" data-user-id="{{ $var->id }}" data-user-status="{{ $var->status }}">Deactivate</button>
+                                                            @elseif ($var->status == '1')
+                                                                <button class="btn btn-success m-1" onclick="updateStatus({{ $var->id }},{{ $var->status }})" data-user-id="{{ $var->id }}" data-user-status="{{ $var->status }}">Activate</button>
+                                                            @endif
+                                                        </td>
 
                                                     </tr>
                                                     @endforeach
@@ -83,5 +100,60 @@
             <script src="{{getAssetFilePath('assets/DataTables/datatables.min.js')}}"></script>
             <script>
                 $("#merchantstab").DataTable({searching: false, paging: false, info: false});
+            </script>
+            <script>
+                function updateStatus(userId,userStatusOLD) {
+                    // Fetch the user ID from the button element
+                    var button = $('button[data-user-id="' + userId + '"]');
+                    var userStatus = button.attr('data-user-status');
+                    // alert('userStatus : '+userStatus);
+
+                    // Send an AJAX POST request to the route with the user ID
+                    $.ajax({
+                        url: '{{ url('admin/update-status') }}' + '/' + userId,
+                        method: 'POST',
+                        data: {
+                            // _token: '{{ csrf_token() }}',
+                            status: userStatus
+                        },
+                        success: function(response) {
+                            console.log('Status updated successfully!');
+                            Swal.fire({
+                                position: 'center',
+                                icon: 'success',
+                                title: response.message,
+                                showConfirmButton: false,
+                                timer: 2200
+                            })
+
+                            var newStatus;
+                            var newClass;
+                            if(response.status == "1")
+                            {
+                                newStatus='Activate';
+                                newClass='btn-success';
+                            }
+                            else if(response.status == "0")
+                            {
+                                newStatus='Deactivate';
+                                newClass='btn-danger';
+                            }
+                            var button = $('button[data-user-id="' + userId + '"]');
+                            button.text(newStatus).removeClass('btn-danger btn-success').addClass(newClass);
+                            button.attr('data-user-status', response.status);
+
+                        },
+                        error: function(xhr, status, error) {
+                            console.log('error');
+                            Swal.fire({
+                                position: 'top-center',
+                                icon: 'error',
+                                title: 'Some Error Found',
+                                showConfirmButton: false,
+                                timer: 1800
+                            })
+                        }
+                    });
+                }
             </script>
             @endsection

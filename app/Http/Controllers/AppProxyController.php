@@ -16,26 +16,47 @@ use Session;
 use Illuminate\Support\Facades\Http;
 use Console;
 use Shopify;
+use Cookie;
 
 class AppProxyController extends Controller
 {
     public function proxycalled(Request $request)
     {
+        $shop = Auth::user();
+        $accessKeysDB=DB::table('insonth')->select('beammid','beamapi','beammode')->where('shop',$shop->name)->first();//->count();//->get();//first();//pluck();//get();//->toArray();
+        $uname=$accessKeysDB->beammid;
+        $pass=$accessKeysDB->beamapi;
+        $beamMode=$accessKeysDB->beammode;
+        $authKeyNew = base64_encode($uname . ":" . $pass);
+        if($beamMode=='test')
+        {
+            $urlHit="https://stg-partner-api.beamdata.co/purchases/".$uname;
+        }
+        elseif($beamMode=='live')
+        {
+            $urlHit="https://partner-api.beamdata.co/purchases/".$uname;
+        }
+        else
+        {
+            dd('error');
+        }
+
         $action=$request->act;
         if(!isset($action))
         {
-            $beampurchaseids = Storage::get('sesd.txt');
-            if($beampurchaseids=="complete")
+            dd("Working");
+            $statChk=DB::table('beamchkoutorderdata')
+                    ->select('stat','beampurchaseid')
+                    ->where('id',$request->id)
+                    ->first();
+
+            $beampurchaseids=$statChk->beampurchaseid;
+            if($statChk->stat == "1")
             {
-                return null;
             }
-            if($beampurchaseids<>"complete")
+            if($statChk->stat == "0")
             {
-                $shop = Auth::user();
-                $urlHit=env('BEAM_URL').$beampurchaseids."/detail";
-                $uname=env('BEAM_USER_NAME');
-                $pass=env('BEAM_PASS_KEY');
-                $authKeyNew = base64_encode($uname . ":" . $pass);
+                $urlHit=$urlHit.'/'.$beampurchaseids."/detail";
 
                 $curl = curl_init();
                 curl_setopt_array($curl, array(
@@ -56,14 +77,11 @@ class AppProxyController extends Controller
                 curl_close($curl);
                 $responses = json_decode($responses, true);
                 $payStatus=$responses['state'];
-                    // $mobile=$responses['customer']['contactNumber'];
-                    // $baddress=$responses['customer']['billingAddress']['fullStreetAddress'];
-                    // dd($responses);
 
 
                 if($payStatus=="complete")
                 {
-                        $orderAmt="";
+                    $orderAmt="";
 
                     $cartOrderDataA=DB::table('beamchkoutorderdata')
                             ->select('variantid','itemqty','shoporderid')
@@ -84,7 +102,7 @@ class AppProxyController extends Controller
                             ],
                         ];
 
-                        $notes="";
+                        $notes=$beampurchaseids;
                         $fname=@$responses['customer']['firstName'];
                         $lname=@$responses['customer']['lastName'];
                         $email=@$responses['customer']['email'];
@@ -100,7 +118,6 @@ class AppProxyController extends Controller
                                 "last_name" => "".$lname."",
                                 "email" => "".$email.""
                         );
-                        // $orderdata['order']['fulfillment_status'] =null;
                         $orderdata['order']['billing_address'] = array(
                             "first_name" => "".$fname."",
                             "last_name" => "".$lname."",
@@ -131,19 +148,11 @@ class AppProxyController extends Controller
                             ]
                         );
                         $orderdata['order']['financial_status'] = $order_status;
-                        // Log::info("Address : ".$baddress);
 
-                    // dd($orderdata);
-                    // Log::info("B : ".$orderdata);
-                    // $orderdata1 = json_decode($orderdata,true);
                     $orderdata1 = json_encode($orderdata);
-                    // Log::info("B : ".$orderdata1);
                     $orderdata = json_decode(json_encode($orderdata),true);
-                    // dd($orderdata);
 
                     $shopApi = $shop->api()->rest('POST', '/admin/api/'.env('SHOPIFY_API_VERSION').'/orders.json',$orderdata)['body']['order'];
-                    // dd($shopApi);
-                    // $shopApi = $shop->api()->rest('POST', '/admin/api/2022-10/orders.json',$orderdata)['body']['order'];
                     $shopApi = json_decode(json_encode($shopApi), true);
                     $order_id=$shopApi['id'];
                     $order_stat_url=$shopApi['order_status_url'];
@@ -152,18 +161,11 @@ class AppProxyController extends Controller
                         $res1 = DB::table('beamchkoutorderdata')
                                         ->where('beampurchaseid',$beampurchaseids)
                                         ->update(['stat' => '1','shoporderid' => $order_id]);
-                        /*$res2 = DB::table('beamcustomer')
-                            ->where('beampurchaseid',$beampurchaseids)
-                            ->update(['order_status' => $order_status, 'shoporderid' => $order_id]);*/
                     }
-                    // Storage::put('sesd.txt', $payStatus);
                     return redirect($order_stat_url);
                 }
                 elseif($payStatus=="beamed")
                 {
-                    $beampurchaseids = Storage::get('sesd.txt');
-                    $urlHit="https://stg-pay.beamcheckout.com/shopifytest/".$beampurchaseids;
-                    return redirect($urlHit);
                 }
             }
         }
@@ -173,54 +175,71 @@ class AppProxyController extends Controller
             $resValue='Show';
             $btnValue="";
             $modalDataBtn="";
-            $shop = Auth::user();
-            // $stylethis="'width:357px;height:53px;border-style:none;border-radius:10px; background:url(\"https://phpstack-102119-3041881.cloudwaysapps.com/storage/img/Primarys.svg\") no-repeat; background-size: cover; cursor: pointer !important; margin: 0px auto; margin-top: 10px !important;'";
+
+            $appUrl=env('APP_URL');
             $stylethis="
+                <style>
 
-<style>
+                    .cart__checkout-button {
+                        max-width: 100%!important;
+                    }
+                    div#btndata {
+                        max-width: 44rem;
+                    }
 
-@media only screen and (max-width: 360px)  {
-button#beamcheckoutbutton{
-    width: 357px;
-    height: 49px;
-    border-style: none;
-    border-radius: 10px;
-    background: url(https://phpstack-102119-3041881.cloudwaysapps.com/storage/img/Primarys.svg) no-repeat;
-    background-size: cover;
-    cursor: pointer !important;
-    margin: 0px auto;
-    margin-top: 10px !important;
-    text-align: center;
-}
-}
-@media only screen and (max-width: 676px) {
-    button#beamcheckoutbutton{
-    width: 311px;
-        height: 49px;
-        border-style: none;
-        border-radius: 10px;
-        background: url(https://phpstack-102119-3041881.cloudwaysapps.com/storage/img/Primarys.svg) no-repeat;
-        background-size: cover;
-        cursor: pointer !important;
-        margin: 0px auto;
-        margin-top: 10px !important;
-        text-align: center;
-    }
-    }
-    button#beamcheckoutbutton{
-    width: 439px;
-    height: 49px;
-    border-style: none;
-    border-radius: 10px;
-    background: url(https://phpstack-102119-3041881.cloudwaysapps.com/storage/img/Primarys.svg) no-repeat;
-    background-size: cover;
-    cursor: pointer !important;
-    margin: 0px auto;
-    margin-top: 10px !important;
-    text-align: center;
-}
+                    button#beamcheckoutbutton {
+                        width: 100%;
+                        height: 40px;
+                        border-style: none;
+                        border-radius: 10px;
+                        background: url(".$appUrl."/storage/img/Primarys.svg) no-repeat;
+                        background-size: cover;
+                        cursor: pointer !important;
+                        margin: 0px auto;
+                        margin-top: 10px !important;
+                        text-align: center;
+                        background-position: center;
+                        min-height: calc(4.5rem + var(--buttons-border-width) * 2);
+                        min-width: calc(12rem + var(--buttons-border-width) * 2);
+                    }
 
-</style>
+
+                    @media only screen and ( max-width: 748px) {
+                        button#beamcheckoutbutton{
+                            width: 100% !important;
+                            max-width:445px;
+                            height: 50px;
+                            border-style: none;
+                            border-radius: 10px;
+                            background: url(".$appUrl."/storage/img/Primarys.svg) no-repeat;
+                            background-size: cover;
+                            cursor: pointer !important;
+                            margin: 0px auto;
+                            margin-top: 10px !important;
+                            text-align: center;
+                            background-position: center;
+                        }
+                    }
+
+                    @media only screen and ( max-width: 490px) {
+                        button#beamcheckoutbutton{
+                            width: 100% !important;
+                            max-width:100vw;
+                            height: 50px;
+                            border-style: none;
+                            border-radius: 10px;
+                            background: url(".$appUrl."/storage/img/Primarys.svg) no-repeat;
+                            background-size: cover;
+                            cursor: pointer !important;
+                            margin: 0px auto;
+                            margin-top: 10px !important;
+                            text-align: center;
+                            background-position: center;
+                        }
+                    }
+
+
+                    </style>
 
                 ";
             if($putOnPage=="product")
@@ -230,9 +249,6 @@ button#beamcheckoutbutton{
                 if($dbShowOrNot=="yes")
                 {
                     $btnValue="$stylethis <button name='beamchkout' id='beamcheckoutbutton' onclick=\"addItemNew(getElementById('selectedproduct').value,getElementById('selproductqty').value);return false;\" class='btn-text'></button>";
-                    //<button name='beamchkout' id='beamcheckoutbutton' onclick="addItem(getElementById('selectedproduct').value,getElementById('selproductqty').value);return false;" class='btn-text' style='width:347px;height:53px;border-style:none;border-radius:10px; background:url("https://www.pngplay.com/wp-content/uploads/8/Upload-Icon-Logo-PNG-Photos.png") no-repeat; background-size: cover; cursor: pointer !important; margin: 0px auto; margin-top: 10px !important;'></button>
-                    //1178<button onclick="addItem();return false;" style='width:11px;height:11px;border-style:none;border-radius:10px; background:url("https://www.pngplay.com/wp-content/uploads/8/Upload-Icon-Logo-PNG-Photos.png") no-repeat; background-size: cover; cursor: pointer !important; margin: 0px auto; margin-top: 10px !important;'></button>
-                    // $modalDataBtn="<button name='beamchkout' id='beamcheckoutbutton' onclick=\"$('#getCodeModal').modal('show');\" class='btn-text' style='width:347px;height:53px;border-style:none;border-radius:10px; background:url(\"https://phpstack-102119-3041881.cloudwaysapps.com/storage/img/Primarys.svg\") no-repeat; background-size: cover; cursor: pointer !important; margin: 0px auto; margin-top: 10px !important;'></button>";
                 }
             }
             elseif($putOnPage=="cart")
@@ -242,522 +258,37 @@ button#beamcheckoutbutton{
                 if($dbShowOrNot=="yes")
                 {
                     $btnValue="$stylethis <button name='beamchkoutc' id='beamcheckoutbutton' onclick=\"beambuttoncr();return false;\" class='btn-textc'></button>";
-                    // $modalDataBtn="<button name='beamchkout' id='beamcheckoutbutton' onclick=\"$('#getCodeModal').modal('show');\" class='btn-text' style='width:347px;height:53px;border-style:none;border-radius:10px; background:url(\"https://phpstack-102119-3041881.cloudwaysapps.com/storage/img/Primarys.svg\") no-repeat; background-size: cover; cursor: pointer !important; margin: 0px auto; margin-top: 10px !important;'></button>";
+                }
+            }
+            elseif($putOnPage=="chkout")
+            {
+                $dbShowOrNotData=DB::table('insonth')->select('pgchkout')->where('shop',$shop->name)->first();
+                $dbShowOrNot=$dbShowOrNotData->pgchkout;
+                if($dbShowOrNot=="yes")
+                {
+                    // $btnValue="<button name='beamchkoutc' id='beamcheckoutbutton' onclick='beambuttoncr();return false;' type='button' class='cart-notification__close modal__close-button link link--text focus-inset' aria-label='Close'></button>";
+                    //$btnValue="<button name='beamchkoutc' id='beamcheckoutbutton' onclick=\"beambuttoncr();return false;\" class='btn-textc' class='cart-notification__close modal__close-button link link--text focus-inset' aria-label='Close'></button>";
+                    // $btnValue="<button name='beamchkoutc' id='beamcheckoutbutton' onclick='beambuttoncr();return false;' class='cart-notification__close modal__close-button link link--text focus-inset' aria-label='Close'></button>";//btn-textc
+                    $btnValue="<button name='beamchkoutc' id='beamcheckoutbutton' onclick='beambuttoncr();return false;' type=\"button\" class=\"cart-notification__close modal__close-button link link--text focus-inset\" aria-label=\"Close\"></button>";
+                }
+            }
+            elseif($putOnPage=="chkouta")
+            {
+                $dbShowOrNotData=DB::table('insonth')->select('pgchkout')->where('shop',$shop->name)->first();
+                $dbShowOrNot=$dbShowOrNotData->pgchkout;
+                if($dbShowOrNot=="yes")
+                {
+                    // $btnValue="<button name='beamchkoutc' id='beamcheckoutbutton' onclick='beambuttoncr();return false;' type='button' class='cart-notification focus-inset color-background-1 gradient animate' aria-label='Close'></button>";
+                    // $btnValue="<button name='beamchkoutc' id='beamcheckoutbutton' onclick=\"beambuttoncr();return false;\" class='btn-textc' onmouseup='this.closest(cart-drawer).close()' aria-label='Close'></button>";
+                    $btnValue="<button name='beamchkoutc' id='beamcheckoutbutton' onclick='beambuttoncr();return false;' type=\"button\" class=\"cart-notification__close modal__close-button link link--text focus-inset\" aria-label=\"Close\"></button>";
                 }
             }
             return response()->json(array('res'=>$resValue,'btn'=>$btnValue));
         }
-        /*if($action=="getcustinfo")
-        {
-            // return view("custinfoform");
-            // $modalData=view("custinfoform");
-            //<button onclick="$('#getCodeModal').modal({backdrop: 'static', keyboard: false},'show');" style='width:11px;height:11px;border-style:none;border-radius:10px; background:url("https://www.pngplay.com/wp-content/uploads/8/Upload-Icon-Logo-PNG-Photos.png") no-repeat; background-size: cover; cursor: pointer !important; margin: 0px auto; margin-top: 10px !important;'></button>
-            //<button onclick="$('#getCodeModal').modal('show');" style='width:11px;height:11px;border-style:none;border-radius:10px; background:url("https://www.pngplay.com/wp-content/uploads/8/Upload-Icon-Logo-PNG-Photos.png") no-repeat; background-size: cover; cursor: pointer !important; margin: 0px auto; margin-top: 10px !important;'></button>
-                            //     <button type="btn button" style="top:-20px;align:center;" class="close" data-dismiss="modal" aria-label="Close">
-                            //     <span aria-hidden="true">&times;</span>
-                            // </button>
-            // $putOnPage=$request->onpage;
-            $putOnPage=$request->onpage;
-            // $resValue='Show';
-            // $btnValue="";
-            $modalDataBtn="";
-            $shop = Auth::user();
-            if($putOnPage=="product")
-            {
-                $dbShowOrNotData=DB::table('insonth')->select('pgprod')->where('shop',$shop->name)->first();
-                $dbShowOrNot=$dbShowOrNotData->pgprod;
-                if($dbShowOrNot=="yes")
-                {
-                    // $btnValue="    <button name='beamchkout' id='beamcheckoutbutton' onclick=\"addItemNew(getElementById('selectedproduct').value,getElementById('selproductqty').value);return false;\" class='btn-text' style='width:347px;height:53px;border-style:none;border-radius:10px; background:url(\"https://phpstack-102119-3041881.cloudwaysapps.com/storage/img/Primarys.svg\") no-repeat; background-size: cover; cursor: pointer !important; margin: 0px auto; margin-top: 10px !important;'></button>";
-                    //<button name='beamchkout' id='beamcheckoutbutton' onclick="addItem(getElementById('selectedproduct').value,getElementById('selproductqty').value);return false;" class='btn-text' style='width:347px;height:53px;border-style:none;border-radius:10px; background:url("https://www.pngplay.com/wp-content/uploads/8/Upload-Icon-Logo-PNG-Photos.png") no-repeat; background-size: cover; cursor: pointer !important; margin: 0px auto; margin-top: 10px !important;'></button>
-                    //1178<button onclick="addItem();return false;" style='width:11px;height:11px;border-style:none;border-radius:10px; background:url("https://www.pngplay.com/wp-content/uploads/8/Upload-Icon-Logo-PNG-Photos.png") no-repeat; background-size: cover; cursor: pointer !important; margin: 0px auto; margin-top: 10px !important;'></button>
-                    $modalDataBtn="<button name='beamchkout' id='beamcheckoutbutton' onclick=\"$('#getCodeModal').modal('show');\" class='btn-text' style='width:347px;height:53px;border-style:none;border-radius:10px; background:url(\"https://phpstack-102119-3041881.cloudwaysapps.com/storage/img/Primarys.svg\") no-repeat; background-size: cover; cursor: pointer !important; margin: 0px auto; margin-top: 10px !important;'></button>";
-                }
-            }
-            elseif($putOnPage=="cart")
-            {
-                $dbShowOrNotData=DB::table('insonth')->select('pgcart')->where('shop',$shop->name)->first();
-                $dbShowOrNot=$dbShowOrNotData->pgcart;
-                if($dbShowOrNot=="yes")
-                {
-                    // $btnValue="<button name='beamchkoutc' id='beamcheckoutbutton' onclick=\"beambuttoncr();return false;\" class='btn-textc' style='width:347px;height:53px;border-style:none;border-radius:10px; background:url(\"https://phpstack-102119-3041881.cloudwaysapps.com/storage/img/Primarys.svg\") no-repeat; background-size: cover; cursor: pointer !important; margin: 0px auto; margin-top: 10px !important;'></button>";
-                    $modalDataBtn="<button name='beamchkout' id='beamcheckoutbutton' onclick=\"$('#getCodeModal').modal('show');\" class='btn-text' style='width:347px;height:53px;border-style:none;border-radius:10px; background:url(\"https://phpstack-102119-3041881.cloudwaysapps.com/storage/img/Primarys.svg\") no-repeat; background-size: cover; cursor: pointer !important; margin: 0px auto; margin-top: 10px !important;'></button>";
-                }
-            }
-            // return response()->json(array('res'=>$resValue,'btn'=>$btnValue));
-
-            $modalData=
-                '
-                <div class="modal fade in" id="getCodeModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-                    aria-hidden="true" data-keyboard="false" data-backdrop="static">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-
-
-                            <div class="col-sm-12 md-form mb-5">
-                                <hr>
-                                <center>
-                                    <h4>Customer Info <i class="glyphicon glyphicon-remove close" data-dismiss="modal"></i> </h4>
-                                </center>
-                            </div>
-                            <div class="modal-body mx-3">
-
-                                            <div class="col-sm-6 md-form mb-5">
-                                                <div class="input-group">
-                                                    <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-                                                    <input type="text" class="form-control validate" name="fname" id="fname" placeholder="First Name" maxlength="100" required>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-6 md-form mb-5">
-                                                <div class="input-group">
-                                                    <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-                                                    <input type="text" class="form-control validate" name="lname" id="lname" placeholder="Last Name" maxlength="100">
-                                                </div>
-                                            </div>
-
-                                            <div class="col-sm-6 md-form mb-5">
-                                                <div class="input-group">
-                                                    <span class="input-group-addon"><i class="glyphicon glyphicon-envelope"></i></span>
-                                                    <input type="email" class="form-control validate" name="email" id="email" placeholder="Email" maxlength="100" required>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-6 md-form mb-5">
-                                                <div class="input-group">
-                                                    <span class="input-group-addon"><i class="glyphicon glyphicon-phone"></i></span>
-                                                    <input type="integer" class="form-control validate" name="mobile" id="mobile" placeholder="Mobile" maxlength="15" required>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-sm-12 md-form mb-5">
-                                                <div class="input-group">
-                                                    <span class="input-group-addon"><i class="glyphicon glyphicon-list-alt"></i></span>
-                                                    <input type="text" class="form-control validate" name="notes" id="notes" placeholder="Notes" maxlength="255">
-                                                </div>
-                                            </div>
-
-                                <div class="col-sm-12 md-form mb-5">
-                                    <hr>
-                                    <center><h4>Billing Details</h4></center>
-                                </div>
-
-                                <div class="col-sm-6 md-form mb-5">
-                                    <div class="input-group">
-                                        <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-                                        <input type="text" class="form-control validate" name="bname" id="bname" placeholder="First Name" maxlength="100">
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 md-form mb-5">
-                                    <div class="input-group">
-                                        <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-                                        <input type="text" class="form-control validate" name="blname" id="blname" placeholder="Last Name" maxlength="100">
-                                    </div>
-                                </div>
-
-                                <div class="col-sm-12 md-form mb-5">
-                                    <div class="input-group">
-                                        <span class="input-group-addon"><i class="glyphicon glyphicon-globe"></i></span>
-                                        <input type="text" class="form-control validate" name="baddress" id="baddress" placeholder="Address" maxlength="255">
-                                    </div>
-                                </div>
-
-                                <div class="col-sm-6 md-form mb-5">
-                                    <div class="input-group">
-                                        <span class="input-group-addon"><i class="glyphicon glyphicon-phone"></i></span>
-                                        <input type="text" class="form-control validate" name="bmobile" id="bmobile" placeholder="Mobile" maxlength="15">
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 md-form mb-5">
-                                    <div class="input-group">
-                                        <span class="input-group-addon"><i class="glyphicon glyphicon-map-marker"></i></span>
-                                        <input type="text" class="form-control validate" name="bcity" id="bcity" placeholder="City" maxlength="150">
-                                    </div>
-                                </div>
-
-                                <div class="col-sm-4 md-form mb-5">
-                                    <div class="input-group">
-                                        <span class="input-group-addon"><i class="glyphicon glyphicon-tag"></i></span>
-                                        <input type="text" class="form-control validate" name="bprovince" id="bprovince" placeholder="Province" maxlength="150">
-                                    </div>
-                                </div>
-                                <div class="col-sm-4 md-form mb-5">
-                                    <div class="input-group">
-                                        <span class="input-group-addon"><i class="glyphicon glyphicon-globe"></i></span>
-                                        <input type="text" class="form-control validate" name="bcountry" id="bcountry" placeholder="Country" maxlength="150">
-                                    </div>
-                                </div>
-                                <div class="col-sm-4 md-form mb-5">
-                                    <div class="input-group">
-                                        <span class="input-group-addon"><i class="glyphicon glyphicon-pushpin"></i></span>
-                                        <input type="text" class="form-control validate" name="bzip" id="bzip" placeholder="Zip" maxlength="10">
-                                    </div>
-                                </div>
-
-                                        <div class="col-sm-12 md-form mb-5">
-                                            <hr>
-                                            <center><h4>Delivery Details</h4></center>
-                                        </div>
-
-                                        <div class="col-sm-6 md-form mb-5">
-                                            <div class="input-group">
-                                                <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-                                                <input type="text" class="form-control validate" name="dname" id="dname" placeholder="First Name" maxlength="100">
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-6 md-form mb-5">
-                                            <div class="input-group">
-                                                <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-                                                <input type="text" class="form-control validate" name="dlname" id="dlname" placeholder="Last Name" maxlength="100">
-                                            </div>
-                                        </div>
-
-                                        <div class="col-sm-12 md-form mb-5">
-                                            <div class="input-group">
-                                                <span class="input-group-addon"><i class="glyphicon glyphicon-globe"></i></span>
-                                                <input type="text" class="form-control validate" name="daddress" id="daddress" placeholder="Address" maxlength="255">
-                                            </div>
-                                        </div>
-
-                                        <div class="col-sm-6 md-form mb-5">
-                                            <div class="input-group">
-                                                <span class="input-group-addon"><i class="glyphicon glyphicon-phone"></i></span>
-                                                <input type="text" class="form-control validate" name="dmobile" id="dmobile" placeholder="Mobile" maxlength="15">
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-6 md-form mb-5">
-                                            <div class="input-group">
-                                                <span class="input-group-addon"><i class="glyphicon glyphicon-map-marker"></i></span>
-                                                <input type="text" class="form-control validate" name="dcity" id="dcity" placeholder="City" maxlength="150">
-                                            </div>
-                                        </div>
-
-                                        <div class="col-sm-4 md-form mb-5">
-                                            <div class="input-group">
-                                                <span class="input-group-addon"><i class="glyphicon glyphicon-tag"></i></span>
-                                                <input type="text" class="form-control validate" name="dprovince" id="dprovince" placeholder="Province" maxlength="150">
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-4 md-form mb-5">
-                                            <div class="input-group">
-                                                <span class="input-group-addon"><i class="glyphicon glyphicon-globe"></i></span>
-                                                <input type="text" class="form-control validate" name="dcountry" id="dcountry" placeholder="Country" maxlength="150">
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-4 md-form mb-5">
-                                            <div class="input-group">
-                                                <span class="input-group-addon"><i class="glyphicon glyphicon-pushpin"></i></span>
-                                                <input type="text" class="form-control validate" name="dzip" id="dzip" placeholder="Zip" maxlength="10">
-                                            </div>
-                                        </div>
-
-                                        <div class="col-sm-12 md-form mb-5">
-                                            <hr>
-                                            <center>
-                                                <button class="btn btn-indigo btn-info" onclick="getcustomerdetails(document.querySelectorAll(\'#fname, #lname, #email, #mobile, #notes, #bname, #blname, #baddress, #bmobile, #bcity, #bprovince, #bcountry, #bzip, #dname, #dlname, #daddress, #dmobile, #dcity, #dprovince, #dcountry, #dzip, #selectedproduct, #selproductqty\'),\''.$putOnPage.'\');return false;">Continue <i class="fa fa-thumbs-up ml-1"></i></button>
-                                                <i class="glyphicon glyphicon-remove close" data-dismiss="modal"></i>
-                                            </center>
-                                        </div>
-
-                            </div>
-                            <div class="modal-footer d-flex justify-content-center">
-                                <div class="col-sm-12 md-form mb-5">
-                                    &nbsp;
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                    ';
-            */
-            /*$modalData=
-            '
-            <div class="modal fade in" id="getCodeModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-                aria-hidden="true" data-keyboard="false" data-backdrop="static">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-
-
-                    <div class="col-sm-12 md-form mb-5">
-                        <hr>
-                        <center>
-                            <h4>Customer Info <i class="glyphicon glyphicon-remove close" data-dismiss="modal"></i> </h4>
-                        </center>
-                    </div><form name="f1" method="post" class="was-validated">
-                    <div class="modal-body mx-3">
-
-                                        <div class="col-sm-6 md-form mb-5">
-                                            <div class="input-group">
-                                                <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-                                                <input type="text" class="form-control validate" name="fname" id="fname" placeholder="First Name" maxlength="100" value="First Name" required>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-6 md-form mb-5">
-                                            <div class="input-group">
-                                                <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-                                                <input type="text" class="form-control validate" name="lname" id="lname" placeholder="Last Name" maxlength="100" value="Last Name" required>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-sm-6 md-form mb-5">
-                                            <div class="input-group">
-                                                <span class="input-group-addon"><i class="glyphicon glyphicon-envelope"></i></span>
-                                                <input type="email" class="form-control validate" name="email" id="email" placeholder="Email" maxlength="100" value="adasd" pattern="^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$" required>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-6 md-form mb-5">
-                                            <div class="input-group">
-                                                <span class="input-group-addon"><i class="glyphicon glyphicon-phone"></i></span>
-                                                <input type="integer" class="form-control validate" name="mobile" id="mobile" placeholder="Mobile" maxlength="15" value="Mobile" required>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-sm-12 md-form mb-5">
-                                            <div class="input-group">
-                                                <span class="input-group-addon"><i class="glyphicon glyphicon-list-alt"></i></span>
-                                                <input type="text" class="form-control validate" name="notes" id="notes" placeholder="Notes" maxlength="255" value="Notes">
-                                            </div>
-                                        </div>
-
-                        <div class="col-sm-12 md-form mb-5">
-                            <hr>
-                            <center><h4>Billing Details</h4></center>
-                        </div>
-
-                        <div class="col-sm-6 md-form mb-5">
-                            <div class="input-group">
-                                <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-                                <input type="text" class="form-control validate" name="bname" id="bname" placeholder="First Name" maxlength="100" value="BFirst Name">
-                            </div>
-                        </div>
-                        <div class="col-sm-6 md-form mb-5">
-                            <div class="input-group">
-                                <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-                                <input type="text" class="form-control validate" name="blname" id="blname" placeholder="Last Name" maxlength="100" value="BLast Name">
-                            </div>
-                        </div>
-
-                        <div class="col-sm-12 md-form mb-5">
-                            <div class="input-group">
-                                <span class="input-group-addon"><i class="glyphicon glyphicon-globe"></i></span>
-                                <input type="text" class="form-control validate" name="baddress" id="baddress" placeholder="Address" maxlength="255" value="BAddress">
-                            </div>
-                        </div>
-
-                        <div class="col-sm-6 md-form mb-5">
-                            <div class="input-group">
-                                <span class="input-group-addon"><i class="glyphicon glyphicon-phone"></i></span>
-                                <input type="text" class="form-control validate" name="bmobile" id="bmobile" placeholder="Mobile" maxlength="15" value="BMobile">
-                            </div>
-                        </div>
-                        <div class="col-sm-6 md-form mb-5">
-                            <div class="input-group">
-                                <span class="input-group-addon"><i class="glyphicon glyphicon-map-marker"></i></span>
-                                <input type="text" class="form-control validate" name="bcity" id="bcity" placeholder="City" maxlength="150" value="BCity">
-                            </div>
-                        </div>
-
-                        <div class="col-sm-4 md-form mb-5">
-                            <div class="input-group">
-                                <span class="input-group-addon"><i class="glyphicon glyphicon-tag"></i></span>
-                                <input type="text" class="form-control validate" name="bprovince" id="bprovince" placeholder="Province" maxlength="150" value="BProvince">
-                            </div>
-                        </div>
-                        <div class="col-sm-4 md-form mb-5">
-                            <div class="input-group">
-                                <span class="input-group-addon"><i class="glyphicon glyphicon-globe"></i></span>
-                                <input type="text" class="form-control validate" name="bcountry" id="bcountry" placeholder="Country" maxlength="150" value="BCountry">
-                            </div>
-                        </div>
-                        <div class="col-sm-4 md-form mb-5">
-                            <div class="input-group">
-                                <span class="input-group-addon"><i class="glyphicon glyphicon-zip"></i></span>
-                                <input type="text" class="form-control validate" name="bzip" id="bzip" placeholder="Zip" maxlength="10" value="BZip">
-                            </div>
-                        </div>
-
-                                    <div class="col-sm-12 md-form mb-5">
-                                        <hr>
-                                        <center><h4>Delivery Details</h4></center>
-                                    </div>
-
-                                    <div class="col-sm-6 md-form mb-5">
-                                        <div class="input-group">
-                                            <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-                                            <input type="text" class="form-control validate" name="dname" id="dname" placeholder="First Name" maxlength="100" value="DFirst Name">
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6 md-form mb-5">
-                                        <div class="input-group">
-                                            <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-                                            <input type="text" class="form-control validate" name="dlname" id="dlname" placeholder="Last Name" maxlength="100" value="DLast Name">
-                                        </div>
-                                    </div>
-
-                                    <div class="col-sm-12 md-form mb-5">
-                                        <div class="input-group">
-                                            <span class="input-group-addon"><i class="glyphicon glyphicon-globe"></i></span>
-                                            <input type="text" class="form-control validate" name="daddress" id="daddress" placeholder="Address" maxlength="255" value="DAddress">
-                                        </div>
-                                    </div>
-
-                                    <div class="col-sm-6 md-form mb-5">
-                                        <div class="input-group">
-                                            <span class="input-group-addon"><i class="glyphicon glyphicon-phone"></i></span>
-                                            <input type="text" class="form-control validate" name="dmobile" id="dmobile" placeholder="Mobile" maxlength="15" value="DMobile">
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6 md-form mb-5">
-                                        <div class="input-group">
-                                            <span class="input-group-addon"><i class="glyphicon glyphicon-map-marker"></i></span>
-                                            <input type="text" class="form-control validate" name="dcity" id="dcity" placeholder="City" maxlength="150" value="DCity">
-                                        </div>
-                                    </div>
-
-                                    <div class="col-sm-4 md-form mb-5">
-                                        <div class="input-group">
-                                            <span class="input-group-addon"><i class="glyphicon glyphicon-tag"></i></span>
-                                            <input type="text" class="form-control validate" name="dprovince" id="dprovince" placeholder="Province" maxlength="150" value="DProvince">
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-4 md-form mb-5">
-                                        <div class="input-group">
-                                            <span class="input-group-addon"><i class="glyphicon glyphicon-globe"></i></span>
-                                            <input type="text" class="form-control validate" name="dcountry" id="dcountry" placeholder="Country" maxlength="150" value="DCountry">
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-4 md-form mb-5">
-                                        <div class="input-group">
-                                            <span class="input-group-addon"><i class="glyphicon glyphicon-zip"></i></span>
-                                            <input type="text" class="form-control validate" name="dzip" id="dzip" placeholder="Zip" maxlength="10" value="DZip">
-                                        </div>
-                                    </div>
-
-                    </div>
-                    <div class="modal-footer d-flex justify-content-center">
-                        <center><br>
-                            <button type="submit" class="validate btn btn-indigo btn-info" onclick="getcustomerdetails(document.querySelectorAll(\'#fname, #lname, #email, #mobile, #notes, #bname, #blname, #baddress, #bmobile, #bcity, #bprovince, #bcountry, #bzip, #dname, #dlname, #daddress, #dmobile, #dcity, #dprovince, #dcountry, #dzip, #selectedproduct, #selproductqty\'),\''.$putOnPage.'\');return false;">Send <i class="fa fa-paper-plane-o ml-1"></i></button>
-                        </center><br><br></form>
-                    </div>
-                    </div>
-                </div>
-                </div>
-                ';*///<button class="btn btn-indigo btn-info" onclick="addItem(getElementById(\'selectedproduct\').value,getElementById(\'selproductqty\').value);return false;">Send <i class="fa fa-paper-plane-o ml-1"></i></button>
-                    //<button class="btn btn-indigo btn-info" onclick="getcustomerdetails(document.querySelectorAll(\'#selectedproduct, #selproductqty\'));addItemNew(getElementById(\'selectedproduct\').value,getElementById(\'selproductqty\').value);return false;">Send <i class="fa fa-paper-plane-o ml-1"></i></button>
-                    //<button class="btn btn-indigo btn-info" onclick="getcustomerdetails(document.querySelectorAll(\'#selectedproduct, #selproductqty\'));return false;">Send <i class="fa fa-paper-plane-o ml-1"></i></button>
-                    //$modalDataBtn="<button onclick=\"$('#getCodeModal').modal('show');\" style='width:11px;height:11px;border-style:none;border-radius:10px; background:url(\"https://www.pngplay.com/wp-content/uploads/8/Upload-Icon-Logo-PNG-Photos.png\") no-repeat; background-size: cover; cursor: pointer !important; margin: 0px auto; margin-top: 10px !important;'></button>";
-                    // $modalDataBtn="<button name='beamchkout' id='beamcheckoutbutton' onclick=\"$('#getCodeModal').modal('show');\" class='btn-text' style='width:347px;height:53px;border-style:none;border-radius:10px; background:url(\"https://phpstack-102119-3041881.cloudwaysapps.com/storage/img/Primarys.svg\") no-repeat; background-size: cover; cursor: pointer !important; margin: 0px auto; margin-top: 10px !important;'></button>";
-                /*'
-                <div class="modal fade" id="getCodeModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 class="modal-title">Modal title</h4>
-                    </div>
-                    <div class="modal-body">
-                        <p><strong>Lorem Ipsum is simply dummy</strong> text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown
-                            printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting,
-                            remaining essentially unchanged.</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-white" ng-click="cancel()">Close</button>
-                        <button type="button" class="btn btn-primary" ng-click="ok()">Save changes</button>
-                    </div>
-                    </div>
-                    </div>
-                </div> ';*/
-            /*return response()->json(array('res'=>'ok','datashow'=>$modalData,'databtn'=>$modalDataBtn));
-        }
-        if($action=="createcustomer")
-        {
-            $shop = Auth::user();
-            $proaray=$request->pro_itemgetdata;
-            $itemNumber=sizeof($proaray);
-
-            if($itemNumber==23)
-            {
-                $proid=$proaray[0];
-                $proqty=$proaray[1];
-            }
-
-            $fname=$proaray[$itemNumber-21];
-            $lname=$proaray[$itemNumber-20];
-            $email=$proaray[$itemNumber-19];
-            $mobile=$proaray[$itemNumber-18];
-            $notes=$proaray[$itemNumber-17];
-            $bname=$proaray[$itemNumber-16];
-            $blname=$proaray[$itemNumber-15];
-            $baddress=$proaray[$itemNumber-14];
-            $bmobile=$proaray[$itemNumber-13];
-            $bcity=$proaray[$itemNumber-12];
-            $bprovince=$proaray[$itemNumber-11];
-            $bcountry=$proaray[$itemNumber-10];
-            $bzip=$proaray[$itemNumber-9];
-            $dname=$proaray[$itemNumber-8];
-            $dlname=$proaray[$itemNumber-7];
-            $daddress=$proaray[$itemNumber-6];
-            $dmobile=$proaray[$itemNumber-5];
-            $dcity=$proaray[$itemNumber-4];
-            $dprovince=$proaray[$itemNumber-3];
-            $dcountry=$proaray[$itemNumber-2];
-            $dzip=$proaray[$itemNumber-1];
-
-            // Log::info("Size : ".$itemNumber);
-            // Log::info("ID : ".$proid);
-            // Log::info("Qty : ".$proqty);
-            // sleep(3000);
-            $insertData = [
-                'shop' => $shop->name,
-                'customer_email' => $email,
-                'mobile' => $mobile,
-                'order_status' => 'pending',
-                'customer_note' => $notes,
-                'cu_first_name' => $fname,
-                'cu_last_name' => $lname,
-                'bl_first_name' => $bname,
-                'bl_last_name' => $blname,
-                'bl_address' => $baddress,
-                'bl_phone' => $bmobile,
-                'bl_city' => $bcity,
-                'bl_province' => $bprovince,
-                'bl_country' => $bcountry,
-                'bl_zip' => $bzip,
-                'dl_first_name' => $dname,
-                'dl_last_name' => $dlname,
-                'dl_address' => $daddress,
-                'dl_phone' => $dmobile,
-                'dl_city' => $dcity,
-                'dl_province' => $dprovince,
-                'dl_country' => $dcountry,
-                'dl_zip' => $dzip,
-                'order_amt' => '0',
-                'beampurchaseid' => '',
-                'shoporderid' => '',
-            ];
-            $insertCustID = DB::table('beamcustomer')->insertGetId($insertData);
-            DB::commit();
-
-            return response()->json(array('stat'=>'success','custid'=>$insertCustID));
-        }*/
-        /*if($action=="createurl")
-        {
-            sleep(15);
-            $paymentLink="https://www.linkedin.com";
-            return response()->json(array('paymentLink'=>$paymentLink));
-        }
-        if($action=="createurlprdct")
-        {
-            sleep(30);
-            $paymentLink="https://www.facebook.com";
-            return response()->json(array('paymentLink'=>$paymentLink));
-        }*/
 
         if($action=="createurl")
         {
-            $urlHit=env('BEAM_URL');
-            $uname=env('BEAM_USER_NAME');
-            $pass=env('BEAM_PASS_KEY');
-            $authKeyNew = base64_encode($uname . ":" . $pass);
-            $shop = Auth::user();
-            $ncustid='0';//$request->pro_custid;
+            $ncustid='0';
             $ncart_token=$request->cart_token;
             $ncart_total_price=$request->cart_total_price;
             $ncart_total_price=$ncart_total_price/100;
@@ -768,8 +299,10 @@ button#beamcheckoutbutton{
             $ncart_items_descp=$request->cart_items_descp;
             $ncart_items_qty=$request->cart_items_qty;
             $ncart_items_variantid=$request->cart_items_variantid;
+            $urlRedirectHost=$request->urlredhost;
             $orderItemsData='';
             $lastiItem=$ncart_items_number-1;
+            $thisID=0;
             for($a=0;$a<$ncart_items_number;$a++)
             {
                 $ncart_items_finalpricea=$ncart_items_finalprice[$a]/100;
@@ -805,15 +338,22 @@ button#beamcheckoutbutton{
                     'carttoken' => $ncart_token,
                     'variantid' => $ncart_items_variantid[$a],
                     'itemqty' => $ncart_items_qty[$a],
-                    'beampurchaseid'=>'up',
+                    'beampurchaseid'=> $thisID,
                     'stat'=>'0',
                     'shoporderid'=>'0',
                 ];
-                $res = DB::table('beamchkoutorderdata')->insert($insertData);
+                if($a==0)
+                {
+                    $thisID = DB::table('beamchkoutorderdata')->insertGetId($insertData);
+                }
+                elseif($a>0)
+                {
+                    $res = DB::table('beamchkoutorderdata')->insert($insertData);
+                }
                 DB::commit();
             }
             $emptyField="";
-            $currentTime = date("d-m-Y H:i:s");//,mktime(date("H")+5,date("i")+30));
+            $currentTime = date("d-m-Y H:i:s");
             $expiryNew = date("Y-m-d H:i:s", strtotime("$currentTime +15 mins"));
             $expiryNew=str_replace(" ","T",$expiryNew);
             $expiryNew.="Z";
@@ -842,11 +382,8 @@ button#beamcheckoutbutton{
                         "totalAmount": '.$ncart_total_price.',
                         "totalDiscount": 0
                     },
-                    "redirectUrl": "https://'.$shop->name.'/apps/proxy",
-                    "requiredFieldsFormId": "beamdatacompany-checkout",
-                    "supportedPaymentMethods": [
-                            "creditCard"
-                    ]
+                    "redirectUrl": "'.$urlRedirectHost.'?id='.$thisID.'",
+                    "requiredFieldsFormId": "beamdatacompany-checkout"
                 }',
             CURLOPT_HTTPHEADER => array(
                 'Content-Type: application/json',
@@ -858,42 +395,41 @@ button#beamcheckoutbutton{
             $responses = json_decode($responses, true);
             $purchaseId=$responses['purchaseId'];
             $paymentLink=$responses['paymentLink'];
-            Storage::put('sesd.txt', $purchaseId);
-            $res1 = DB::table('beamchkoutorderdata')
-                ->where('beampurchaseid', 'up')
+            $newOrderID = DB::table('beamchkoutorderdata')
+                ->select('carttoken','created_at')
+                ->where('id', $thisID)
+                ->first();
+            $res3 = DB::table('beamchkoutorderdata')
+                ->where('carttoken', $newOrderID->carttoken)
+                ->where('stat', '0')
+                ->where('created_at', $newOrderID->created_at)
                 ->update(['beampurchaseid' => $purchaseId, 'shoporderid' => $ncart_total_price]);
-            /*$res2 = DB::table('beamcustomer')
-                ->where('id', $ncustid)
-                ->update(['beampurchaseid' => $purchaseId, 'order_amt' => $ncart_total_price]);
-            Log::info("AMOUNT \nbeampurchaseid : ". $purchaseId . '\norder_amt : ' . $ncart_total_price);*/
+            DB::commit();
             return response()->json(array('paymentLink'=>$paymentLink));
         }
         if($action=="createurlprdct")
         {
-            $urlHit=env('BEAM_URL');
-            $uname=env('BEAM_USER_NAME');
-            $pass=env('BEAM_PASS_KEY');
-            $authKeyNew = base64_encode($uname . ":" . $pass);
-            $shop = Auth::user();
-            $ncustid='0';//$request->pro_custid;
+            $ncustid='0';
             $proid=$request->pro_variantid;
             $proqty=$request->pro_qty;
-            $products = $shop->api()->rest('GET','/admin/api/'.env('SHOPIFY_API_VERSION').'/variants/'.$proid.'.json');//,['limit'=>4]
+            $urlRedirectHost=$request->urlredhost;
+            $products = $shop->api()->rest('GET','/admin/api/'.env('SHOPIFY_API_VERSION').'/variants/'.$proid.'.json');
             $products = $products['body']['variant'];
             $products = json_encode($products);
             $products = json_decode($products, true);
             $productID=$products['product_id'];
+            $productsName = $shop->api()->rest('GET','/admin/api/'.env('SHOPIFY_API_VERSION').'/products/'.$productID.'.json')['body']['product'];
             $imageID=$products['image_id'];
             if($imageID!=null)
             {
-                $imageName = $shop->api()->rest('GET','/admin/api/'.env('SHOPIFY_API_VERSION').'/products/'.$productID.'/images/'.$imageID.'.json');//,['limit'=>4]
+                $imageName = $shop->api()->rest('GET','/admin/api/'.env('SHOPIFY_API_VERSION').'/products/'.$productID.'/images/'.$imageID.'.json');
                 $imageName = $imageName['body']['image'];
                 $imageName = json_encode($imageName);
                 $imageName = json_decode($imageName, true);
             }
             else
             {
-                $imageName = $shop->api()->rest('GET','/admin/api/'.env('SHOPIFY_API_VERSION').'/products/'.$productID.'.json');//,['limit'=>4]
+                $imageName = $shop->api()->rest('GET','/admin/api/'.env('SHOPIFY_API_VERSION').'/products/'.$productID.'.json');
                 $imageName = $imageName['body']['product']['image'];
                 $imageName = json_encode($imageName);
                 $imageName = json_decode($imageName, true);
@@ -908,8 +444,9 @@ button#beamcheckoutbutton{
             $ncart_items_number=$proqty;
             $ncart_items_finalprice=$ncart_total_price;
             $ncart_items_images=$imageName['src'];
-            $ncart_items_name=$products['title'];
+            $ncart_items_name=$productsName['title'];
             $ncart_items_descp=$products['title'];
+            if($ncart_items_descp=="Default Title"){$ncart_items_descp="";}
             $ncart_items_qty=$proqty;
             $ncart_items_variantid=$proid;
             $ncart_items_finalpricea=$products['price'];
@@ -933,10 +470,10 @@ button#beamcheckoutbutton{
                 'stat'=>'0',
                 'shoporderid'=>'0',
             ];
-            $res = DB::table('beamchkoutorderdata')->insert($insertData);
+            $thisID = DB::table('beamchkoutorderdata')->insertGetId($insertData);
             DB::commit();
             $emptyField="";
-            $currentTime = date("d-m-Y H:i:s");//,mktime(date("H")+5,date("i")+30));
+            $currentTime = date("d-m-Y H:i:s");
             $expiryNew = date("Y-m-d H:i:s", strtotime("$currentTime +15 mins"));
             $expiryNew=str_replace(" ","T",$expiryNew);
             $expiryNew.="Z";
@@ -965,11 +502,8 @@ button#beamcheckoutbutton{
                         "totalAmount": '.$ncart_total_price.',
                         "totalDiscount": 0
                     },
-                    "redirectUrl": "https://'.$shop->name.'/apps/proxy",
-                    "requiredFieldsFormId": "beamdatacompany-checkout",
-                    "supportedPaymentMethods": [
-                            "creditCard"
-                    ]
+                    "redirectUrl": "'.$urlRedirectHost.'?id='.$thisID.'",
+                    "requiredFieldsFormId": "beamdatacompany-checkout"
                 }',
             CURLOPT_HTTPHEADER => array(
                 'Content-Type: application/json',
@@ -981,14 +515,9 @@ button#beamcheckoutbutton{
             $responses = json_decode($responses, true);
             $purchaseId=$responses['purchaseId'];
             $paymentLink=$responses['paymentLink'];
-            Storage::put('sesd.txt', $purchaseId);
             $res1 = DB::table('beamchkoutorderdata')
-                ->where('beampurchaseid', 'up')
+                ->where('id', $thisID)
                 ->update(['beampurchaseid' => $purchaseId, 'shoporderid' => $ncart_total_price]);
-            /*$res2 = DB::table('beamcustomer')
-                ->where('id', $ncustid)
-                ->update(['beampurchaseid' => $purchaseId, 'order_amt' => $ncart_total_price]);
-            Log::info("AMOUNT \nbeampurchaseid : ". $purchaseId . '\norder_amt : ' . $ncart_total_price);*/
 
             return response()->json(array('paymentLink'=>$paymentLink));
         }

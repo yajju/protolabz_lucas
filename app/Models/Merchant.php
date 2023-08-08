@@ -10,7 +10,7 @@ class Merchant extends Authenticatable
 {
     use HasFactory;
     protected $guard = 'merchants';
-    protected $table = 'users';
+    // protected $table = 'merchants';
     // protected $fillable = ['name', 'email', 'password'];
 }
 

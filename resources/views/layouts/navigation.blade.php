@@ -1,6 +1,6 @@
 
-        <div class="w3-containerXX" style="">
-          <div class="w3-bar w3-black">
+        {{-- <div class="w3-containerXX" style="">
+          <div class="w3-bar">
             <div class="w3-dropdown-hover w3-mobile">
               <button class="w3-button"><i class="fa fa-cogXX"></i>App Settings <i class="fa fa-caret-down"></i></button>
               <div class="w3-dropdown-content w3-bar-block w3-dark-grey">
@@ -9,4 +9,4 @@
               </div>
             </div>
           </div>
-        </div>
+        </div> --}}

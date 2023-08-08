@@ -1,6 +1,6 @@
 @extends('merchants.layout.appframe')
 
-@section('content')
+@section('main_body')
 <div class="content">
     <div class="row">
         <p class="col-lg-12">
@@ -45,4 +45,4 @@
         </div>
     </div>
 </div>
-@stop
+@endsection
